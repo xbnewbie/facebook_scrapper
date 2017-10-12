@@ -23,8 +23,8 @@ app_secret = "536ac272e65a4a5cb8b2966250e3c12c"  # DO NOT SHARE WITH ANYONE!
 group_id = "543189115781206"
 
 # input date formatted as YYYY-MM-DD
-since_date = "2017-10-11"
-until_date = "2017-10-12"
+since_date = "2017-09-03"
+until_date = "2017-09-15"
 
 access_token = app_id + "|" + app_secret
 
@@ -138,7 +138,7 @@ def processFacebookPageFeedStatus(status):
 
 
 def scrapeFacebookPageFeedStatus(group_id, access_token, since_date, until_date):
-    xmlrpc_object = Custom_WP_XMLRPC()
+
     with open('{}_facebook_statuses.csv'.format(group_id), 'w') as file:
         w = csv.writer(file)
         w.writerow(["status_id", "status_message", "status_author", "link_name",
@@ -178,21 +178,28 @@ def scrapeFacebookPageFeedStatus(group_id, access_token, since_date, until_date)
                 # Ensure it is a status with the expected metadata
                 if 'reactions' in status:
                     status_data = processFacebookPageFeedStatus(status)
-
-                    wpUrl = 'http://localhost/wordpress/xmlrpc.php'
+                    xmlrpc_object = Custom_WP_XMLRPC()
+                    wpUrl = 'http://jualhewan123.com/xmlrpc.php'
+                    articleTitle="";
                     # WordPress Username
                     wpUserName = 'admin'
                     # WordPress Password
-                    wpPassword = 'admin'
+                    wpPassword = 'Coba123@'
 
                     # Post Title
                     articleTitle = "Jual"
                     # Post Body/Description
                     source =status_data[1];
-                    source_msg = unicode(source, 'utf-8')
+                    source_msg="";
+                    try:
+                        source_msg = unicode(source, 'utf-8')
+                    except TypeError:
+                        source_msg =source
 
                     temp = source_msg.split(" ")[:4];
-                    title = temp[0] + " " + temp[1] + " " + temp[2] + " " + temp[3];
+                    title="";
+                    for i in range(0,len(temp)):
+                        title = title + " " + temp[i]
 
                     articleTitle = title
                     articleContent = status_data[2] +" : "+source_msg +" \n" + "kontak <a href='https://facebook.com/"+status_data[3]+"'> "\
@@ -210,13 +217,21 @@ def scrapeFacebookPageFeedStatus(group_id, access_token, since_date, until_date)
                             articleCategories.append(hewan);
 
                     # list of Categories
+                    try:
 
-                    urlPoto =fb_grap_picture(status_data[6]);
-                    xmlrpc_object.post_article(wpUrl, wpUserName, wpPassword, articleTitle, articleCategories,
-                                               articleContent, articleTags,
-                                               urlPoto)
-                    exit();
-                    reactions_data = reactions[status_data[0]]
+                        urlPoto =fb_grap_picture(status_data[6]);
+                        if (len(articleTitle) >= 2 and len(urlPoto)):
+                            xmlrpc_object.post_article(wpUrl, wpUserName, wpPassword, articleTitle, articleCategories,
+                                                       articleContent, articleTags,
+                                                       urlPoto)
+                        else:
+                            print "invalid_kontent";
+                            print source_msg;
+                            print status_data[6];
+                    except IndexError:
+                        pass
+
+
 
                     # calculate thankful/pride through algebra
                     #num_special = status_data[7] - sum(reactions_data)

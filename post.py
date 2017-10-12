@@ -13,7 +13,10 @@ import urllib
 def fb_grap_picture(u):
     u=u.replace("www","mobile");
     result=[]
-    urlData = urllib.urlopen(u);
+    try:
+        urlData = urllib.urlopen(u);
+    except IOError:
+        return "";
     data = str(urlData.readlines())
     bs = BeautifulSoup(data, 'lxml');
     imgUrl = bs.find_all('img');
@@ -34,20 +37,18 @@ class Custom_WP_XMLRPC:
         self.wpPassword = wpPassword
         # Download File
         f = open(self.path, 'wb')
-        print self.path,self.articlePhotoUrl
         f.write(urllib.urlopen(self.articlePhotoUrl).read())
         f.close()
         # Upload to WordPress
         client = Client(self.wpUrl, self.wpUserName, self.wpPassword)
         filename = self.path
         # prepare metadata
-        data = {'name': 'picture.jpg', 'type': 'image/jpg', }
+        data = {'name': articleTitle+".jpg", 'type': 'image/jpg', }
         # read the binary file and let the XMLRPC library encode it into base64
         with open(filename, 'rb') as img:
             data['bits'] = xmlrpc_client.Binary(img.read())
         response = client.call(media.UploadFile(data))
         attachment_id = response['id'];
-        print attachment_id;
         # Post
         post = WordPressPost()
         post.title = articleTitle
