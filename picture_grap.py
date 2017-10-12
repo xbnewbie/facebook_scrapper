@@ -1,12 +1,17 @@
 from bs4 import BeautifulSoup
 import urllib
 
-urlData = urllib.urlopen("https://mobile.facebook.com/photo.php?fbid=1327262447383250&set=gm.1213564898743621&type=3");
-data = str(urlData.readlines())
-print data
-bs = BeautifulSoup(data,'lxml');
-imgUrl = bs.find_all('img');
-for x in imgUrl:
-    if "scontent" in x.get('src'):
-        urllib.urlretrieve(x.get('src'), "plane.jpg")
-#
+def fb_grap_picture(u):
+    u=u.replace("www","mobile");
+    result=[]
+    urlData = urllib.urlopen(u);
+    data = str(urlData.readlines())
+    bs = BeautifulSoup(data, 'lxml');
+    imgUrl = bs.find_all('img');
+    for x in imgUrl:
+        if "scontent" in x.get('src'):
+            result.append(x.get('src'));
+            #
+    return result;
+
+print fb_grap_picture('https://www.facebook.com/photo.php?fbid=10210823931253743&set=gm.1214864741946970&type=3');

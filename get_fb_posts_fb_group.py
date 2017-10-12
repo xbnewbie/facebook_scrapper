@@ -3,6 +3,16 @@ import datetime
 import csv
 import time
 import re
+from post import Custom_WP_XMLRPC
+from post import fb_grap_picture
+import urllib
+from wordpress_xmlrpc import Client, WordPressPost
+from wordpress_xmlrpc.methods import posts
+import xmlrpclib
+from wordpress_xmlrpc.compat import xmlrpc_client
+from wordpress_xmlrpc.methods import media, posts
+from difflib import SequenceMatcher
+import difflib
 try:
     from urllib.request import urlopen, Request
 except ImportError:
@@ -93,7 +103,6 @@ def processFacebookPageFeedStatus(status):
 
     # Additionally, some items may not always exist,
     # so must check for existence first
-
     status_id = status['id']
     status_type = status['type']
 
@@ -114,6 +123,7 @@ def processFacebookPageFeedStatus(status):
     status_published = status_published.strftime(
         '%Y-%m-%d %H:%M:%S')  # best time format for spreadsheet programs
     status_author = unicode_decode(status['from']['name'])
+    status_author_id= unicode_decode(status['from']['id'])
 
     # Nested items require chaining dictionary keys.
 
@@ -123,11 +133,12 @@ def processFacebookPageFeedStatus(status):
         status['comments']['summary']['total_count']
     num_shares = 0 if 'shares' not in status else status['shares']['count']
 
-    return (status_id, status_message, status_author, link_name, status_type,
+    return (status_id, status_message, status_author,status_author_id, link_name, status_type,
             status_link, status_published, num_reactions, num_comments, num_shares)
 
 
 def scrapeFacebookPageFeedStatus(group_id, access_token, since_date, until_date):
+    xmlrpc_object = Custom_WP_XMLRPC()
     with open('{}_facebook_statuses.csv'.format(group_id), 'w') as file:
         w = csv.writer(file)
         w.writerow(["status_id", "status_message", "status_author", "link_name",
@@ -158,7 +169,6 @@ def scrapeFacebookPageFeedStatus(group_id, access_token, since_date, until_date)
             until = '' if until is '' else "&until={}".format(until)
             paging = '' if until is '' else "&__paging_token={}".format(paging)
             base_url = base + node + parameters + since + until + paging
-
             url = getFacebookPageFeedUrl(base_url)
             statuses = json.loads(request_until_succeed(url))
             reactions = getReactionsForStatuses(base_url)
@@ -168,13 +178,49 @@ def scrapeFacebookPageFeedStatus(group_id, access_token, since_date, until_date)
                 # Ensure it is a status with the expected metadata
                 if 'reactions' in status:
                     status_data = processFacebookPageFeedStatus(status)
-                    print status_data;
+
+                    wpUrl = 'http://localhost/wordpress/xmlrpc.php'
+                    # WordPress Username
+                    wpUserName = 'admin'
+                    # WordPress Password
+                    wpPassword = 'admin'
+
+                    # Post Title
+                    articleTitle = "Jual"
+                    # Post Body/Description
+                    source =status_data[1];
+                    source_msg = unicode(source, 'utf-8')
+
+                    temp = source_msg.split(" ")[:4];
+                    title = temp[0] + " " + temp[1] + " " + temp[2] + " " + temp[3];
+
+                    articleTitle = title
+                    articleContent = status_data[2] +" : "+source_msg +" \n" + "kontak <a href='https://facebook.com/"+status_data[3]+"'> "\
+                                     + status_data[2] +"</a>";
+                    # list of tags
+
+                    text2 = "angsa anjing anoa antelop arwana ayam babi badak bajing bangau bebek bekantan bekicot belalang belatung belibis belut beo berang beruang beruk beruk betet betok biawak bintang biribiri bison blekok buaya bulu babi bunglon burung cacing camar capung cencorang cendrawasih cere cerek cheetah cicak codot cucakrawa cumicumi dara domba duyung elang entok gabus gagak gajah gapih garuda gelatik gorila gurame gurita hamster harimau hiena hiu iguana ikan itik jalak jangkrik jerapah kadal kakatua kaki seribu kalajengking kalkun kalong kambing kampret kangguru kapibara kasuari katak kebo kecebong kodok kecoa kecoak kelabang keledai kelelawar kelinci kenari keong kepiting kera kerang kerapu kerbau kijang koala kobra kodok koi koi komodo kucing kuda kudanil kudaponi kumbang kupu kupu kura kuskus kutu labalaba lalat lalatbuah laler landak landaklaut laron lebah lele lemur lintah lipan lipas lobster lumbalumba lutung lutung luwak macan macankumbang macantutul makarel maleo mambruk marmut maskoki merak merpati milkat monyet mujaer musang ngengat nila nyamuk onta orangutan oskar owa panda parkit patin paus pelatuk penyu perkutut pesut pinguin pipit piranha piton rajawali rayap rubah rusa salmon sanca sapi sapu sapu semut sepat serigala siamang singa siput soang sotong tangkasi tapir tarantula tarsius tawon tekukur tengiri teri teripang terwelu tikus tiram todak tomcat trenggiling tuna tupai uburubur udang ular ularderik ularsendok ulat undurundur unta walet wauwau wereng yuyu zebra";
+                    articleTags = ['jual hewan']
+                    articleCategories = ["umum"]
+                    data_hewan = text2.split(" ");
+                    for hewan in data_hewan:
+                        if (hewan in source_msg):
+                            tag ="jual "+hewan
+                            articleTags.append(tag);
+                            articleCategories.append(hewan);
+
+                    # list of Categories
+
+                    urlPoto =fb_grap_picture(status_data[6]);
+                    xmlrpc_object.post_article(wpUrl, wpUserName, wpPassword, articleTitle, articleCategories,
+                                               articleContent, articleTags,
+                                               urlPoto)
                     exit();
                     reactions_data = reactions[status_data[0]]
 
                     # calculate thankful/pride through algebra
-                    num_special = status_data[7] - sum(reactions_data)
-                    w.writerow(status_data + reactions_data + (num_special,))
+                    #num_special = status_data[7] - sum(reactions_data)
+                    #w.writerow(status_data + reactions_data + (num_special,))
 
                 # output progress occasionally to make sure code is not
                 # stalling
