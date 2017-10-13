@@ -184,7 +184,7 @@ def scrapeFacebookPageFeedStatus(group_id, access_token, since_date, until_date)
                     # WordPress Username
                     wpUserName = 'admin'
                     # WordPress Password
-                    wpPassword = 'Coba123@'
+                    wpPassword = 'mypassword'
 
                     # Post Title
                     articleTitle = "Jual"
