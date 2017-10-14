@@ -20,11 +20,11 @@ except ImportError:
 
 app_id = "2150528968507557"
 app_secret = "536ac272e65a4a5cb8b2966250e3c12c"  # DO NOT SHARE WITH ANYONE!
-group_id = "543189115781206"
+group_id = "1407181832848632"
 
 # input date formatted as YYYY-MM-DD
-since_date = "2017-09-03"
-until_date = "2017-09-15"
+since_date = "2017-10-01"
+until_date = "2017-10-04"
 
 access_token = app_id + "|" + app_secret
 
@@ -184,10 +184,12 @@ def scrapeFacebookPageFeedStatus(group_id, access_token, since_date, until_date)
                     # WordPress Username
                     wpUserName = 'admin'
                     # WordPress Password
-                    wpPassword = 'mypassword'
+                    wpPassword = 'adm@'
 
                     # Post Title
                     articleTitle = "Jual"
+                    city ="Jakarta";
+                    articleCategories = [city]
                     # Post Body/Description
                     source =status_data[1];
                     source_msg="";
@@ -202,25 +204,29 @@ def scrapeFacebookPageFeedStatus(group_id, access_token, since_date, until_date)
                         title = title + " " + temp[i]
 
                     articleTitle = title
-                    articleContent = status_data[2] +" : "+source_msg +" \n" + "kontak <a href='https://facebook.com/"+status_data[3]+"'> "\
+                    try:
+                        articleContent = source_msg +" \n" + "kontak <a href='https://facebook.com/"+status_data[3]+"'> "\
                                      + status_data[2] +"</a>";
+                    except UnicodeDecodeError:
+                        articleContent="";
                     # list of tags
 
                     text2 = "angsa anjing anoa antelop arwana ayam babi badak bajing bangau bebek bekantan bekicot belalang belatung belibis belut beo berang beruang beruk beruk betet betok biawak bintang biribiri bison blekok buaya bulu babi bunglon burung cacing camar capung cencorang cendrawasih cere cerek cheetah cicak codot cucakrawa cumicumi dara domba duyung elang entok gabus gagak gajah gapih garuda gelatik gorila gurame gurita hamster harimau hiena hiu iguana ikan itik jalak jangkrik jerapah kadal kakatua kaki seribu kalajengking kalkun kalong kambing kampret kangguru kapibara kasuari katak kebo kecebong kodok kecoa kecoak kelabang keledai kelelawar kelinci kenari keong kepiting kera kerang kerapu kerbau kijang koala kobra kodok koi koi komodo kucing kuda kudanil kudaponi kumbang kupu kupu kura kuskus kutu labalaba lalat lalatbuah laler landak landaklaut laron lebah lele lemur lintah lipan lipas lobster lumbalumba lutung lutung luwak macan macankumbang macantutul makarel maleo mambruk marmut maskoki merak merpati milkat monyet mujaer musang ngengat nila nyamuk onta orangutan oskar owa panda parkit patin paus pelatuk penyu perkutut pesut pinguin pipit piranha piton rajawali rayap rubah rusa salmon sanca sapi sapu sapu semut sepat serigala siamang singa siput soang sotong tangkasi tapir tarantula tarsius tawon tekukur tengiri teri teripang terwelu tikus tiram todak tomcat trenggiling tuna tupai uburubur udang ular ularderik ularsendok ulat undurundur unta walet wauwau wereng yuyu zebra";
                     articleTags = ['jual hewan']
-                    articleCategories = ["umum"]
+
                     data_hewan = text2.split(" ");
                     for hewan in data_hewan:
                         if (hewan in source_msg):
-                            tag ="jual "+hewan
+                            tag ="jual "+hewan +" city"
                             articleTags.append(tag);
-                            articleCategories.append(hewan);
+
 
                     # list of Categories
+
                     try:
 
                         urlPoto =fb_grap_picture(status_data[6]);
-                        if (len(articleTitle) >= 2 and len(urlPoto)):
+                        if (len(articleTitle) >= 2 and len(urlPoto) and len(articleContent) >=5):
                             xmlrpc_object.post_article(wpUrl, wpUserName, wpPassword, articleTitle, articleCategories,
                                                        articleContent, articleTags,
                                                        urlPoto)
